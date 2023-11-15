@@ -39,18 +39,15 @@ class ball{
 class Player {
     canvas;
     context;
-    x;
-    y;
-    world;
-    constructor(canvas, ctx, world) {
+    constructor(canvas, ctx) {
         this.canvas = canvas;
         this.context = ctx;
         this.canvasPosX = this.canvas.width / 2;
         this.canvasPosY = this.canvas.height / 2;
         this.x = 0;
         this.y = 0;
-        this.world = world;
     }
+    //todo change the method so that it can be called in the game update function instead of by even listener so that it is consistent.
     update(dx, dy){
         if(dist(this.x, this.y, 0, 0) < WORLD_RADIUS){
             this.x += dx;
@@ -103,10 +100,6 @@ class Game{
     }
     update(){
         this.world.update();
-        this.player.update();
-        console.log(this.player);
-        console.log(this.player.x);
-        console.log(this.player.y);
 
     }
     render(){
