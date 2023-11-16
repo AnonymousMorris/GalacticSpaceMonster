@@ -106,9 +106,9 @@ class world{
     }
     render(){
         this.context.beginPath();
-        this.context.moveTo(this.x, this.y);
+        this.context.lineWidth = 20;
         this.context.arc(-this.player.x + centerX, -this.player.y + centerY, this.radius, 0, 2* Math.PI);
-        this.context.fill();
+        this.context.stroke();
     }
 }
 class Game{
