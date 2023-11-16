@@ -20,7 +20,9 @@ function dist(x1, y1, x2, y2){
 }
 const mousePos = {
     x : 0,
-    y : 0
+    y : 0,
+    relativeX : this.x - centerX,
+    relativeY : this.y - centerY
 }
 
 class ball{
@@ -39,29 +41,26 @@ class Player {
     constructor(canvas, ctx) {
         this.canvas = canvas;
         this.context = ctx;
-        this.canvasPosX = this.canvas.width / 2;
-        this.canvasPosY = this.canvas.height / 2;
         this.x = 0;
         this.y = 0;
+        this.angle = 0;
     }
-    //todo change the method so that it can be called in the game update function instead of by even listener so that it is consistent.
     update(){
         this.updatePos();
+        this.updateDirection();
     }
     updatePos() {
-        const relativeX = mousePos.x - centerX;
-        const relativeY = mousePos.y - centerY;
         let distance = 0;
         if(dist){ //check to make sure the function exists before using
-            distance = dist(relativeX, relativeY);
+            distance = dist(mousePos.relativeX, mousePos.relativeY);
         }
         // normalize the dx and dy
-        let dx = relativeX / distance;
-        let dy = relativeY / distance;
+        let dx = mousePos.relativeX / distance;
+        let dy = mousePos.relativeY / distance;
         // create a dampening effect when mouse is close to player
-        if(distance < 10){
-            dx *= distance / 15;
-            dy *= distance / 15;
+        if(distance < 100){
+            dx *= distance / 150;
+            dy *= distance / 150;
         }
         if(dist(this.x + dx, this.y + dy, 0, 0) < WORLD_RADIUS){
             this.x += dx;
@@ -70,15 +69,23 @@ class Player {
     }
     updateDirection(){
         //todo point sprite to the mouse
+        this.angle = Math.atan(mousePos.relativeY / mousePos.relativeX);
+        if(mousePos.relativeX < 0){
+            this.angle += Math.PI;
+        }
     }
     render(){
+        this.context.save();
+        this.context.translate(centerX, centerY);
+        this.context.rotate(this.angle);
         this.context.beginPath();
-        this.context.moveTo(this.canvasPosX, this.canvasPosY);
-        this.context.lineTo(this.canvasPosX - 20, this.canvasPosY);
-        this.context.lineTo(this.canvasPosX, this.canvasPosY - 40);
-        this.context.lineTo(this.canvasPosX + 20, this.canvasPosY);
+        this.context.moveTo(0, 0);
+        this.context.lineTo(-30, 10);
+        this.context.lineTo(-30, -10);
+        this.context.lineTo(0, 0);
         this.context.fill();
         this.context.closePath();
+        this.context.restore();
     }
 }
 class world{
@@ -131,4 +138,6 @@ function animate(){
 canvas.addEventListener("mousemove", e => {
     mousePos.x = e.clientX - canvas.offsetLeft;
     mousePos.y = e.clientY - canvas.offsetTop;
+    mousePos.relativeX = mousePos.x - centerX;
+    mousePos.relativeY = mousePos.y - centerY;
 }, false);
