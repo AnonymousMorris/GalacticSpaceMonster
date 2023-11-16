@@ -24,10 +24,6 @@ const mousePos = {
 }
 
 class ball{
-    canvas;
-    context;
-    x;
-    y;
     constructor(canvas, ctx, x, y) {
         this.canvas = canvas;
         this.context = ctx;
@@ -40,8 +36,6 @@ class ball{
 }
 
 class Player {
-    canvas;
-    context;
     constructor(canvas, ctx) {
         this.canvas = canvas;
         this.context = ctx;
@@ -88,12 +82,6 @@ class Player {
     }
 }
 class world{
-    radius;
-    canvas;
-    context;
-    x;
-    y;
-    player;
     constructor(canvas, ctx, radius, player) {
         this.canvas = canvas;
         this.context = ctx;
@@ -112,8 +100,6 @@ class world{
     }
 }
 class Game{
-    world;
-    player;
     constructor(canvas, ctx) {
         this.canvas = canvas;
         this.context = ctx;
