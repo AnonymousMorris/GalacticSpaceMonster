@@ -69,7 +69,7 @@ class Player {
             dx *= distance / 15;
             dy *= distance / 15;
         }
-        if(dist(this.x, this.y, 0, 0) < WORLD_RADIUS){
+        if(dist(this.x + dx, this.y + dy, 0, 0) < WORLD_RADIUS){
             this.x += dx;
             this.y += dy;
         }
