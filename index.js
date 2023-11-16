@@ -1,13 +1,13 @@
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 const WORLD_RADIUS = 500;
+const spriteAssets = document.getElementById("sprites");
+const homePlanetAsset = spriteAssets.querySelector("#home-planet");
 //resize canvas to fill window
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 //todo clean this up
 canvas.lineWidth = 5;
-
-
 centerX = canvas.width / 2;
 centerY = canvas.height / 2;
 function dist(x1, y1, x2, y2){
@@ -25,15 +25,29 @@ const mousePos = {
     relativeY : this.y - centerY
 }
 
-class ball{
-    constructor(canvas, ctx, x, y) {
+class planet{
+    constructor(canvas, ctx, x, y, radius, player) {
         this.canvas = canvas;
         this.context = ctx;
-        this.x = x;
-        this.y = y;
+        this.absX = x;
+        this.absY = y;
+        this.radius = radius;
+        this.player = player;
+        this.relativeX = -this.player.x - this.absX;
+        this.relativeY = -this.player.y - this.absY;
     }
-    render(player){
-        //todo
+    update(){
+        this.relativeX = -this.player.x - this.absX;
+        this.relativeY = -this.player.y - this.absY;
+    }
+    render(){
+        const screenX = this.relativeX + centerX;
+        const screenY = this.relativeY + centerY;
+        this.context.drawImage(homePlanetAsset, screenX, screenY, this.radius, this.radius);
+        // this.context.beginPath();
+        // this.context.lineWidth = 20;
+        // this.context.arc( screenX, screenY, this.radius, 0, 2* Math.PI);
+        // this.context.stroke();
     }
 }
 
@@ -47,7 +61,7 @@ class Player {
     }
     update(){
         this.updatePos();
-        this.updateDirection();
+        this.updateAngle();
     }
     updatePos() {
         let distance = 0;
@@ -67,7 +81,7 @@ class Player {
             this.y += dy;
         }
     }
-    updateDirection(){
+    updateAngle(){
         //todo point sprite to the mouse
         this.angle = Math.atan(mousePos.relativeY / mousePos.relativeX);
         if(mousePos.relativeX < 0){
@@ -113,16 +127,18 @@ class Game{
         //radius is the size of the world since our world is a circle
         this.player = new Player(this.canvas, this.context);
         this.world = new world(canvas, ctx, WORLD_RADIUS, this.player);
+        this.planet = new planet(canvas, ctx, 200, 400, 50, this.player);
     }
     update(){
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.world.update();
         this.player.update();
-
+        this.world.update();
+        this.planet.update();
     }
     render(){
-        this.world.render();
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.player.render();
+        this.world.render();
+        this.planet.render();
     }
 }
 
