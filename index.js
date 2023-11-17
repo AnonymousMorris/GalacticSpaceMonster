@@ -90,11 +90,10 @@ class planet{
     render(){
         const screenX = this.relativeX + centerX;
         const screenY = this.relativeY + centerY;
-        this.context.drawImage(homePlanetAsset, screenX, screenY, this.radius, this.radius);
-        // this.context.beginPath();
-        // this.context.lineWidth = 20;
-        // this.context.arc( screenX, screenY, this.radius, 0, 2* Math.PI);
-        // this.context.stroke();
+        if(screenX > -this.radius && screenX < this.game.canvas.width + this.radius
+            && screenY > -this.radius && screenY < this.game.canvas.height){
+            this.context.drawImage(homePlanetAsset, screenX, screenY, this.radius, this.radius);
+        }
     }
 }
 
