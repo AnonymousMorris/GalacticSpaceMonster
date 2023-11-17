@@ -3,6 +3,8 @@ const ctx = canvas.getContext("2d");
 const WORLD_RADIUS = 500;
 const spriteAssets = document.getElementById("sprites");
 const homePlanetAsset = spriteAssets.querySelector("#home-planet");
+const MAX_PLANET_RADIUS = 100;
+let PLAYER_SPEED = 1;
 //resize canvas to fill window
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -24,15 +26,60 @@ const mousePos = {
     relativeX : this.x - centerX,
     relativeY : this.y - centerY
 }
+class planetPool{
+    //todo implement a planet pool such that only pools around the player are updated
+    constructor(game){
+        this.game = game;
+        this.planetPool = [];
+        this.blockWidth = Math.round(game.canvas.width / 2) + MAX_PLANET_RADIUS;
+        this.blockHeight = Math.round(game.canvas.height / 2) + MAX_PLANET_RADIUS;
+        this.numX = Math.floor(WORLD_RADIUS / this.blockWidth ) + 1;
+        this.numY = Math.floor(WORLD_RADIUS / this.blockHeight) + 1;
+        for(let i = 0; i < this.numX; i++){
+            this.planetPool[i] = []
+            const offsetX = i * this.blockWidth - WORLD_RADIUS;
+            for(let j = 0; j < this.numY; j++){
+                this.planetPool[i][j] = [];
+                const offsetY = j * this.blockHeight - WORLD_RADIUS;
+                const n = Math.round(Math.random() * 5);
+                for(let k = 0; k < n; k++){
+                    const planetPosX = Math.random() * this.blockWidth + offsetX;
+                    const planetPosY = Math.random() * this.blockHeight + offsetY;
+                    const planetRadius = Math.random() * MAX_PLANET_RADIUS / 2 + MAX_PLANET_RADIUS / 2;
+                    this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
+                }
+            }
+        }
+    }
+    update(){
+        const col = Math.floor((this.game.player.x + WORLD_RADIUS) / this.blockWidth);
+        const row = Math.floor((this.game.player.y + WORLD_RADIUS) / this.blockHeight);
+        for(let i = Math.max(0, col - 1); i < Math.min(this.numX, col + 2); i++){
+            for(let j = Math.max(0, row - 1); j < Math.min(this.numY, row + 2); j++){
+                this.planetPool[i][j].forEach((planet) => planet.update());
+            }
+        }
+    }
+    render(){
 
+        const col = Math.floor((this.game.player.x + WORLD_RADIUS) / this.blockWidth);
+        const row = Math.floor((this.game.player.y + WORLD_RADIUS) / this.blockHeight);
+        for(let i = Math.max(0, col - 1); i < Math.min(this.numX, col + 2); i++){
+            for(let j = Math.max(0, row - 1); j < Math.min(this.numY, row + 2); j++){
+                this.planetPool[i][j].forEach((planet) => planet.render());
+            }
+        }
+    }
+}
 class planet{
-    constructor(canvas, ctx, x, y, radius, player) {
-        this.canvas = canvas;
-        this.context = ctx;
+    constructor(game, x, y, radius) {
+        this.game = game;
+        this.canvas = game.canvas;
+        this.context = game.context;
         this.absX = x;
         this.absY = y;
         this.radius = radius;
-        this.player = player;
+        this.player = game.player;
         this.relativeX = -this.player.x - this.absX;
         this.relativeY = -this.player.y - this.absY;
     }
@@ -69,8 +116,8 @@ class Player {
             distance = dist(mousePos.relativeX, mousePos.relativeY);
         }
         // normalize the dx and dy
-        let dx = mousePos.relativeX / distance;
-        let dy = mousePos.relativeY / distance;
+        let dx = PLAYER_SPEED * mousePos.relativeX / distance;
+        let dy = PLAYER_SPEED * mousePos.relativeY / distance;
         // create a dampening effect when mouse is close to player
         if(distance < 100){
             dx *= distance / 150;
@@ -127,18 +174,18 @@ class Game{
         //radius is the size of the world since our world is a circle
         this.player = new Player(this.canvas, this.context);
         this.world = new world(canvas, ctx, WORLD_RADIUS, this.player);
-        this.planet = new planet(canvas, ctx, 200, 400, 50, this.player);
+        this.planetPool = new planetPool(this);
     }
     update(){
         this.player.update();
         this.world.update();
-        this.planet.update();
+        this.planetPool.update();
     }
     render(){
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.player.render();
         this.world.render();
-        this.planet.render();
+        this.planetPool.render();
     }
 }
 
