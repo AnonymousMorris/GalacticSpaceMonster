@@ -43,14 +43,14 @@ class planetPool{
             const offsetX = i * this.blockWidth - WORLD_RADIUS;
             for(let j = 0; j < this.numY; j++){
                 this.planetPool[i][j] = [];
-                const offsetY = j * this.blockHeight - WORLD_RADIUS;
+                const offsetY = -j * this.blockHeight + WORLD_RADIUS;
                 // const n = Math.round(Math.random() * 5);
                 const n = 50;
                 for(let k = 0; k < n; k++){
                     const planetPosX = Math.random() * this.blockWidth + offsetX;
                     // const planetPosX = offsetX;
-                    // const planetPosY = offsetY;
-                    const planetPosY = Math.random() * this.blockHeight + offsetY;
+                    const planetPosY = offsetY;
+                    // const planetPosY = -Math.random() * this.blockHeight + offsetY;
                     const planetRadius = Math.random() * MAX_PLANET_RADIUS / 2 + MAX_PLANET_RADIUS / 2;
                     //logging some stuff
                     this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
@@ -62,7 +62,7 @@ class planetPool{
     }
     update(){
         const col = Math.floor((this.game.player.x + WORLD_RADIUS) / this.blockWidth);
-        const row = Math.floor((this.game.player.y + WORLD_RADIUS) / this.blockHeight);
+        const row = Math.floor((-this.game.player.y + WORLD_RADIUS) / this.blockHeight);
         for(let i = Math.max(0, col - 1); i < Math.min(this.numX, col + 2); i++){
             for(let j = Math.max(0, row - 1); j < Math.min(this.numY, row + 2); j++){
                 this.planetPool[i][j].forEach((planet) => planet.update());
@@ -72,7 +72,7 @@ class planetPool{
     render(){
 
         const col = Math.floor((this.game.player.x + WORLD_RADIUS) / this.blockWidth);
-        const row = Math.floor((this.game.player.y + WORLD_RADIUS) / this.blockHeight);
+        const row = Math.floor((-this.game.player.y + WORLD_RADIUS) / this.blockHeight);
         for(let i = Math.max(0, col - 1); i < Math.min(this.numX, col + 2); i++){
             for(let j = Math.max(0, row - 1); j < Math.min(this.numY, row + 2); j++){
                 this.planetPool[i][j].forEach((planet) => planet.render());
@@ -91,8 +91,8 @@ class planet{
         this.relativeY = this.absY + centerY;
     }
     update(){
-        this.relativeX = -this.player.x - this.absX;
-        this.relativeY = -this.player.y - this.absY;
+        this.relativeX = this.absX - this.player.x;
+        this.relativeY =  this.absY - this.player.y;
     }
     render(){
         const screenX = this.relativeX + centerX;
