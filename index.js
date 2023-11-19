@@ -88,8 +88,9 @@ class planet{
         const screenX = this.relativeX + centerX;
         const screenY = this.relativeY + centerY;
         if(screenX > -this.radius && screenX < this.game.width + this.radius
-            && screenY > -this.radius && screenY < this.game.height){
-            this.game.context.drawImage(homePlanetAsset, screenX - this.radius, screenY + this.radius, 2 * this.radius, 2 * this.radius);
+            && screenY > -this.radius && screenY < this.game.height + this.radius){
+            this.game.context.fillText("here", screenX, screenY);
+            this.game.context.drawImage(homePlanetAsset, screenX - this.radius, screenY - this.radius, 2 * this.radius, 2 * this.radius);
         }
     }
 }
