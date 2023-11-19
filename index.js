@@ -1,6 +1,6 @@
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
-const WORLD_RADIUS = 500;
+const WORLD_RADIUS = 2000;
 const spriteAssets = document.getElementById("sprites");
 const homePlanetAsset = spriteAssets.querySelector("#home-planet");
 const MAX_PLANET_RADIUS = 100;
@@ -45,7 +45,9 @@ class planetPool{
                     const planetPosX = Math.random() * this.blockWidth + offsetX;
                     const planetPosY = -Math.random() * this.blockHeight + offsetY;
                     const planetRadius = Math.random() * MAX_PLANET_RADIUS / 2 + MAX_PLANET_RADIUS / 2;
-                    this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
+                    if(dist(planetPosX, planetPosY) < WORLD_RADIUS - planetRadius){
+                        this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
+                    }
                 }
             }
         }
