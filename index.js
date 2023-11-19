@@ -27,27 +27,36 @@ const mousePos = {
     relativeY : this.y - centerY
 }
 class planetPool{
-    //todo implement a planet pool such that only pools around the player are updated
     constructor(game){
         this.game = game;
         this.planetPool = [];
         this.blockWidth = Math.round(game.canvas.width / 2) + MAX_PLANET_RADIUS;
         this.blockHeight = Math.round(game.canvas.height / 2) + MAX_PLANET_RADIUS;
-        this.numX = Math.floor(WORLD_RADIUS / this.blockWidth ) + 1;
-        this.numY = Math.floor(WORLD_RADIUS / this.blockHeight) + 1;
+        this.numX = Math.floor(WORLD_RADIUS * 2 / this.blockWidth ) + 1;
+        this.numY = Math.floor(WORLD_RADIUS * 2 / this.blockHeight) + 1;
+        console.log("block width:" + this.blockWidth);
+        console.log("numX: " + this.numX);
+        console.log("block height:" + this.blockHeight);
+        console.log("numY: " + this.numY);
         for(let i = 0; i < this.numX; i++){
             this.planetPool[i] = []
             const offsetX = i * this.blockWidth - WORLD_RADIUS;
             for(let j = 0; j < this.numY; j++){
                 this.planetPool[i][j] = [];
                 const offsetY = j * this.blockHeight - WORLD_RADIUS;
-                const n = Math.round(Math.random() * 5);
+                // const n = Math.round(Math.random() * 5);
+                const n = 50;
                 for(let k = 0; k < n; k++){
                     const planetPosX = Math.random() * this.blockWidth + offsetX;
+                    // const planetPosX = offsetX;
+                    // const planetPosY = offsetY;
                     const planetPosY = Math.random() * this.blockHeight + offsetY;
                     const planetRadius = Math.random() * MAX_PLANET_RADIUS / 2 + MAX_PLANET_RADIUS / 2;
+                    //logging some stuff
                     this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
                 }
+                console.log(offsetX);
+                console.log(offsetY);
             }
         }
     }
@@ -74,14 +83,12 @@ class planetPool{
 class planet{
     constructor(game, x, y, radius) {
         this.game = game;
-        this.canvas = game.canvas;
-        this.context = game.context;
         this.absX = x;
         this.absY = y;
         this.radius = radius;
         this.player = game.player;
-        this.relativeX = -this.player.x - this.absX;
-        this.relativeY = -this.player.y - this.absY;
+        this.relativeX = this.absX + centerX;
+        this.relativeY = this.absY + centerY;
     }
     update(){
         this.relativeX = -this.player.x - this.absX;
@@ -90,9 +97,10 @@ class planet{
     render(){
         const screenX = this.relativeX + centerX;
         const screenY = this.relativeY + centerY;
-        if(screenX > -this.radius && screenX < this.game.canvas.width + this.radius
-            && screenY > -this.radius && screenY < this.game.canvas.height){
-            this.context.drawImage(homePlanetAsset, screenX, screenY, this.radius, this.radius);
+        if(screenX > -this.radius && screenX < this.game.width + this.radius
+            && screenY > -this.radius && screenY < this.game.height){
+            this.game.context.drawImage(homePlanetAsset, screenX, screenY, this.radius, this.radius);
+            this.game.context.fillText(this.absX, screenX, screenY);
         }
     }
 }
@@ -170,6 +178,8 @@ class Game{
     constructor(canvas, ctx) {
         this.canvas = canvas;
         this.context = ctx;
+        this.width = canvas.width;
+        this.height = canvas.height;
         //radius is the size of the world since our world is a circle
         this.player = new Player(this.canvas, this.context);
         this.world = new world(canvas, ctx, WORLD_RADIUS, this.player);
