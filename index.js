@@ -1,8 +1,11 @@
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
+const backgroundCanvas = document.getElementById("background-canvas")
+const backgroundContext = backgroundCanvas.getContext("2d");
 const WORLD_RADIUS = 1000;
 const spriteAssets = document.getElementById("sprites");
 const homePlanetAsset = spriteAssets.querySelector("#home-planet");
+const backgroundImage = document.getElementById("background-image");
 const MAX_PLANET_RADIUS = 100;
 let PLAYER_SPEED = 1;
 //resize canvas to fill window
@@ -91,7 +94,6 @@ class planet{
         const screenY = this.relativeY + centerY;
         if(screenX > -this.radius && screenX < this.game.width + this.radius
             && screenY > -this.radius && screenY < this.game.height + this.radius){
-            this.game.context.fillText("here", screenX, screenY);
             this.game.context.drawImage(homePlanetAsset, screenX - this.radius, screenY - this.radius, 2 * this.radius, 2 * this.radius);
         }
     }
@@ -166,8 +168,53 @@ class world{
         this.context.stroke();
     }
 }
+class background{
+    constructor(game, img, canvas, ctx){
+        this.game = game;
+        this.player = this.game.player;
+        this.img = img;
+        this.canvas = canvas;
+        this.context = ctx;
+        this.imgWidth = img.width;
+        this.imgHeight = img.height;
+        this.imgX = 0;
+        this.imgY = 0;
+    }
+    update(){
+        this.imgX = (this.player.x - centerX) % this.imgWidth;
+        if(this.player.x - centerX < 0){
+            this.imgX -= this.imgWidth;
+        }
+        this.imgY = (this.player.y - this.game.height) % this.imgHeight;
+        if(this.player.y - this.game.height < 0){
+            this.imgY -= this.imgHeight;
+        }
+    }
+    render(){
+        // const sx = this.imgX - this.player.x;
+        // const sy = this.imgY - this.player.x;
+        // const sw = this.game.width - sx;
+        // const sh = this.game.height - sy;
+        // this.context.clearRect(0, 0, this.game.width, this.game.height);
+        // this.context.drawImage(this.img, sx, sy, sx, sy, 0, 0, sx, sy);
+        // if(sw < this.game.width){
+        //     this.context.drawImage(this.img, 0, sy, this.game.width - sw, sh, sw, 0, this.game.width - sw, sh);
+        // }
+        // if(sh < this.game.height){
+        //      this.context.drawImage(this.img, sx, 0, sw, this.game.height - sh, 0, sh, sw, this.game.height - sh);
+        // }
+        // if(sh < this.game.height && sw < this.game.width){
+        //     this.context.drawImage(this.img, 0, 0, this.game.width - sw, this.game.height - sh, sw, sh, this.game.width - sw, this.game.height - sh);
+        // }
+        this.context.font = "20px Arial";  // Set the font size and family
+        this.context.fillStyle = "red";   // Set the text color
+        this.context.fontWeight = "bold"; // Set the font weight
+        this.context.fillText("X: " + this.imgX + "Y: " + this.imgY, centerX, centerY + 100);
+        // console.log("X: " + this.imgX + "Y: " + this.imgY);
+    }
+}
 class Game{
-    constructor(canvas, ctx) {
+    constructor(canvas, ctx, backgroundCanvas, backgroundContext, img) {
         this.canvas = canvas;
         this.context = ctx;
         this.width = canvas.width;
@@ -176,21 +223,24 @@ class Game{
         this.player = new Player(this.canvas, this.context);
         this.world = new world(canvas, ctx, WORLD_RADIUS, this.player);
         this.planetPool = new planetPool(this);
+        this.background = new background(this, img, backgroundCanvas, backgroundContext);
     }
     update(){
         this.player.update();
         this.world.update();
         this.planetPool.update();
+        this.background.update();
     }
     render(){
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.player.render();
         this.world.render();
         this.planetPool.render();
+        this.background.render();
     }
 }
 
-game = new Game(canvas, ctx);
+game = new Game(canvas, ctx, backgroundCanvas, backgroundContext, backgroundImage);
 animate();
 function animate(){
     game.update();
