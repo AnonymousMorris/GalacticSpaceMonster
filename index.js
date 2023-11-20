@@ -2,7 +2,7 @@ const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 const backgroundCanvas = document.getElementById("background-canvas")
 const backgroundContext = backgroundCanvas.getContext("2d");
-const WORLD_RADIUS = 1000;
+const WORLD_RADIUS = 2000;
 const spriteAssets = document.getElementById("sprites");
 const homePlanetAsset = spriteAssets.querySelector("#home-planet");
 const backgroundImage = document.getElementById("background-image");
@@ -183,33 +183,35 @@ class background{
     update(){
         this.imgX = (this.player.x - centerX) % this.imgWidth;
         if(this.player.x - centerX < 0){
-            this.imgX -= this.imgWidth;
+            this.imgX = this.imgWidth + this.imgX;
         }
         this.imgY = (this.player.y - this.game.height) % this.imgHeight;
         if(this.player.y - this.game.height < 0){
-            this.imgY -= this.imgHeight;
+            this.imgY = this.imgHeight + this.imgY;
         }
     }
     render(){
-        // const sx = this.imgX - this.player.x;
-        // const sy = this.imgY - this.player.x;
-        // const sw = this.game.width - sx;
-        // const sh = this.game.height - sy;
-        // this.context.clearRect(0, 0, this.game.width, this.game.height);
-        // this.context.drawImage(this.img, sx, sy, sx, sy, 0, 0, sx, sy);
-        // if(sw < this.game.width){
-        //     this.context.drawImage(this.img, 0, sy, this.game.width - sw, sh, sw, 0, this.game.width - sw, sh);
-        // }
-        // if(sh < this.game.height){
-        //      this.context.drawImage(this.img, sx, 0, sw, this.game.height - sh, 0, sh, sw, this.game.height - sh);
-        // }
-        // if(sh < this.game.height && sw < this.game.width){
-        //     this.context.drawImage(this.img, 0, 0, this.game.width - sw, this.game.height - sh, sw, sh, this.game.width - sw, this.game.height - sh);
-        // }
-        this.context.font = "20px Arial";  // Set the font size and family
-        this.context.fillStyle = "red";   // Set the text color
-        this.context.fontWeight = "bold"; // Set the font weight
-        this.context.fillText("X: " + this.imgX + "Y: " + this.imgY, centerX, centerY + 100);
+        const sx = Math.floor(this.imgX);
+        const sy = Math.floor(this.imgY);
+        const sw = Math.min(this.imgWidth - sx, this.game.width);
+        const sh = Math.min(this.imgHeight - sy, this.game.height);
+        this.context.clearRect(0, 0, this.game.width, this.game.height);
+        this.context.drawImage(this.img, sx, sy, sw, sh, 0, 0, sw, sh);
+        if(sw < this.game.width){
+            this.context.drawImage(this.img, 0, sy, this.game.width - sw, sh, sw, 0, this.game.width - sw, sh);
+        }
+        if(sh < this.game.height){
+             this.context.drawImage(this.img, sx, 0, sw, this.game.height - sh, 0, sh, sw, this.game.height - sh);
+        }
+        if(sh < this.game.height && sw < this.game.width){
+            this.context.drawImage(this.img, 0, 0, this.game.width - sw, this.game.height - sh, sw, sh, this.game.width - sw, this.game.height - sh);
+        }
+
+
+        // this.context.font = "20px Arial";  // Set the font size and family
+        // this.context.fillStyle = "red";   // Set the text color
+        // this.context.fontWeight = "bold"; // Set the font weight
+        // this.context.fillText("X: " + this.imgX + "Y: " + this.imgY, centerX, centerY + 100);
         // console.log("X: " + this.imgX + "Y: " + this.imgY);
     }
 }
