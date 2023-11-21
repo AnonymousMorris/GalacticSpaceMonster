@@ -2,15 +2,17 @@ const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 const backgroundCanvas = document.getElementById("background-canvas")
 const backgroundContext = backgroundCanvas.getContext("2d");
-const WORLD_RADIUS = 2000;
+const WORLD_RADIUS = 3000;
 const spriteAssets = document.getElementById("sprites");
 const homePlanetAsset = spriteAssets.querySelector("#home-planet");
 const backgroundImage = document.getElementById("background-image");
 const MAX_PLANET_RADIUS = 100;
-let PLAYER_SPEED = 1;
+let PLAYER_SPEED = 5;
 //resize canvas to fill window
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+backgroundCanvas.width = window.innerWidth;
+backgroundCanvas.height = window.innerHeight;
 //todo clean this up
 canvas.lineWidth = 5;
 centerX = canvas.width / 2;
@@ -185,34 +187,66 @@ class background{
         if(this.player.x - centerX < 0){
             this.imgX = this.imgWidth + this.imgX;
         }
-        this.imgY = (this.player.y - this.game.height) % this.imgHeight;
-        if(this.player.y - this.game.height < 0){
+        this.imgY = (this.player.y - centerY) % this.imgHeight;
+        if(this.player.y - centerY < 0){
             this.imgY = this.imgHeight + this.imgY;
         }
     }
     render(){
+        const orientationX = !!(Math.floor((this.player.x - centerX) / this.imgWidth) % 2);
+        const orientationY = !!(Math.floor((this.player.y - centerY) / this.imgHeight) % 2);
         const sx = Math.floor(this.imgX);
         const sy = Math.floor(this.imgY);
-        const sw = Math.min(this.imgWidth - sx, this.game.width);
-        const sh = Math.min(this.imgHeight - sy, this.game.height);
+        const sw = Math.min(this.imgWidth - sx, this.canvas.width);
+        const sh = Math.min(this.imgHeight - sy, this.canvas.height);
         this.context.clearRect(0, 0, this.game.width, this.game.height);
-        this.context.drawImage(this.img, sx, sy, sw, sh, 0, 0, sw, sh);
+        this.renderWithOrientation(sx, sy, sw, sh, 0, 0, sw, sh, orientationX, orientationY);
         if(sw < this.game.width){
-            this.context.drawImage(this.img, 0, sy, this.game.width - sw, sh, sw, 0, this.game.width - sw, sh);
+            this.renderWithOrientation(0, sy, this.game.width - sw, sh, sw, 0, this.game.width - sw, sh, !orientationX, orientationY);
         }
         if(sh < this.game.height){
-             this.context.drawImage(this.img, sx, 0, sw, this.game.height - sh, 0, sh, sw, this.game.height - sh);
+            // console.log("something wrong with your height")
+             this.renderWithOrientation(sx, 0, sw, this.game.height - sh, 0, sh, sw, this.game.height - sh, orientationX, !orientationY);
         }
         if(sh < this.game.height && sw < this.game.width){
-            this.context.drawImage(this.img, 0, 0, this.game.width - sw, this.game.height - sh, sw, sh, this.game.width - sw, this.game.height - sh);
+            this.renderWithOrientation(0, 0, this.game.width - sw, this.game.height - sh, sw, sh, this.game.width - sw, this.game.height - sh, !orientationX, !orientationY);
         }
-
-
-        // this.context.font = "20px Arial";  // Set the font size and family
-        // this.context.fillStyle = "red";   // Set the text color
-        // this.context.fontWeight = "bold"; // Set the font weight
-        // this.context.fillText("X: " + this.imgX + "Y: " + this.imgY, centerX, centerY + 100);
-        // console.log("X: " + this.imgX + "Y: " + this.imgY);
+    }
+    renderWithOrientation(sx, sy, sw, sh, dx, dy, dw, dh, orientationX, orientationY){
+        if(orientationX && orientationY){
+            this.renderFlippedHorizontallyAndVertically(sx, sy, sw, sh, dx, dy, dw, dh);
+        }
+        else if(orientationX){
+            this.renderFlippedHorizontally(sx, sy, sw, sh, dx, dy, dw, dh);
+        }
+        else if(orientationY){
+            this.renderFlippedVertically(sx, sy, sw, sh, dx, dy, dw, dh);
+        }
+        else{
+            this.context.drawImage(this.img, sx, sy, sw, sh, dx, dy, dw, dh);
+        }
+    }
+    renderFlippedHorizontally(sx, sy, sw, sh, dx, dy, dw, dh){
+        this.context.save();
+        this.context.fill();
+        this.context.scale(-1, 1);
+        this.context.translate( - this.canvas.width, 0);
+        this.context.drawImage(this.img, this.imgWidth - sx, sy, -sw, sh, this.canvas.width - dx, dy, -dw, dh);
+        this.context.restore();
+    }
+    renderFlippedVertically(sx, sy, sw, sh, dx, dy, dw, dh){
+        this.context.save();
+        this.context.scale(1, -1);
+        this.context.translate(0, - this.game.height);
+        this.context.drawImage(this.img, sx, this.imgHeight - sy, sw, -sh, dx, this.canvas.height - dy, dw, -dh);
+        this.context.restore();
+    }
+    renderFlippedHorizontallyAndVertically(sx, sy, sw, sh, dx, dy, dw, dh){
+        this.context.save();
+        this.context.scale(-1, -1);
+        this.context.translate(-this.canvas.width, -this.canvas.height);
+        this.context.drawImage(this.img, this.imgWidth - sx, this.imgHeight - sy, -sw, -sh, this.canvas.width - dx, this.canvas.height - dy, -dw, -dh);
+        this.context.restore();
     }
 }
 class Game{
