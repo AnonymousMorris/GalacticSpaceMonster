@@ -1,11 +1,20 @@
+let game;
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 const backgroundCanvas = document.getElementById("background-canvas")
 const backgroundContext = backgroundCanvas.getContext("2d");
 const WORLD_RADIUS = 3000;
-const spriteAssets = document.getElementById("sprites");
-const homePlanetAsset = spriteAssets.querySelector("#home-planet");
-const backgroundImage = document.getElementById("background-image");
+let imgLoaded = 0;
+const NUM_IMAGES = 2;
+let spriteSheet = new Image();
+let homePlanetImage = new Image();
+let backgroundImage = new Image();
+homePlanetImage.src = "/assets/Planets/planet00.png";
+backgroundImage.src = "/assets/space_background.png";
+homePlanetImage.onload = handleImageLoad;
+backgroundImage.onload= handleImageLoad;
+// const homePlanetImage = document.getElementById("#home-planet");
+// const backgroundImage = document.getElementById("background-image");
 const MAX_PLANET_RADIUS = 100;
 let PLAYER_SPEED = 5;
 //resize canvas to fill window
@@ -96,7 +105,7 @@ class planet{
         const screenY = this.relativeY + centerY;
         if(screenX > -this.radius && screenX < this.game.width + this.radius
             && screenY > -this.radius && screenY < this.game.height + this.radius){
-            this.game.context.drawImage(homePlanetAsset, screenX - this.radius, screenY - this.radius, 2 * this.radius, 2 * this.radius);
+            this.game.context.drawImage(homePlanetImage, screenX - this.radius, screenY - this.radius, 2 * this.radius, 2 * this.radius);
         }
     }
 }
@@ -275,9 +284,16 @@ class Game{
         this.background.render();
     }
 }
-
-game = new Game(canvas, ctx, backgroundCanvas, backgroundContext, backgroundImage);
-animate();
+function handleImageLoad(){
+    imgLoaded++;
+    if(imgLoaded === NUM_IMAGES){
+        initializeGame();
+    }
+}
+function initializeGame(){
+   game = new Game(canvas, ctx, backgroundCanvas, backgroundContext, backgroundImage);
+    animate();
+}
 function animate(){
     game.update();
     game.render();
