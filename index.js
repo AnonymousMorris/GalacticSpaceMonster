@@ -5,16 +5,16 @@ const backgroundCanvas = document.getElementById("background-canvas")
 const backgroundContext = backgroundCanvas.getContext("2d");
 const WORLD_RADIUS = 3000;
 let imgLoaded = 0;
-const NUM_IMAGES = 2;
+const NUM_IMAGES = 3;
 let spriteSheet = new Image();
 let homePlanetImage = new Image();
 let backgroundImage = new Image();
+spriteSheet.src = "/assets/enemy_sprite_sheet.svg";
 homePlanetImage.src = "/assets/Planets/planet00.png";
 backgroundImage.src = "/assets/space_background.png";
+spriteSheet.onload = handleImageLoad;
 homePlanetImage.onload = handleImageLoad;
 backgroundImage.onload= handleImageLoad;
-// const homePlanetImage = document.getElementById("#home-planet");
-// const backgroundImage = document.getElementById("background-image");
 const MAX_PLANET_RADIUS = 100;
 let PLAYER_SPEED = 5;
 //resize canvas to fill window
@@ -141,11 +141,7 @@ class Player {
         }
     }
     updateAngle(){
-        //todo point sprite to the mouse
-        this.angle = Math.atan(mousePos.relativeY / mousePos.relativeX);
-        if(mousePos.relativeX < 0){
-            this.angle += Math.PI;
-        }
+        this.angle = Math.atan2(mousePos.relativeY, mousePos.relativeX);
     }
     render(){
         this.context.save();
@@ -173,10 +169,12 @@ class world{
         this.y = -this.player.y + centerY;
     }
     render(){
-        this.context.beginPath();
-        this.context.lineWidth = 20;
-        this.context.arc(-this.player.x + centerX, -this.player.y + centerY, this.radius, 0, 2* Math.PI);
-        this.context.stroke();
+        if(dist(this.x, this.y) + dist(this.canvas.width, this.canvas.height) >= WORLD_RADIUS){
+            this.context.beginPath();
+            this.context.lineWidth = 20;
+            this.context.arc(-this.player.x + centerX, -this.player.y + centerY, this.radius, 0, 2* Math.PI);
+            this.context.stroke();
+        }
     }
 }
 class background{
@@ -214,7 +212,6 @@ class background{
             this.renderWithOrientation(0, sy, this.game.width - sw, sh, sw, 0, this.game.width - sw, sh, !orientationX, orientationY);
         }
         if(sh < this.game.height){
-            // console.log("something wrong with your height")
              this.renderWithOrientation(sx, 0, sw, this.game.height - sh, 0, sh, sw, this.game.height - sh, orientationX, !orientationY);
         }
         if(sh < this.game.height && sw < this.game.width){
@@ -258,8 +255,56 @@ class background{
         this.context.restore();
     }
 }
+class enemy{
+    constructor(game, img, row, col, speed, initialX, initialY) {
+        this.game = game;
+        this.player = this.game.player;
+        this.canvas = this.game.canvas;
+        this.context = this.game.context;
+        this.img = img;
+        this.row = row - 1;
+        this.col = col - 1;
+        this.x = initialX;
+        this.y = initialY;
+        this.speed = speed
+        this.angle = 0;
+        this.dx = 0;
+        this.dy = 0;
+    }
+    update(){
+        const diffX = this.player.x - this.x;
+        const diffY = this.player.y - this.y;
+        // prevent division by 0
+        const distance = Math.max(1, dist(diffX, diffY));
+        this.angle = Math.atan2(diffY, diffX);
+        this.dx = this.speed * diffX / distance;
+        this.dy = this.speed * diffY / distance;
+        this.x += this.dx;
+        this.y += this.dy;
+    }
+    render(){
+        const relativeX = this.x - this.player.x + centerX;
+        const relativeY = this.y - this.player.y + centerY;
+        this.context.save();
+        this.context.translate(relativeX, relativeY);
+        this.context.rotate(-Math.PI / 2 + this.angle);
+        this.renderSprite();
+        this.context.restore();
+    }
+    renderSprite(){
+        const sw = this.img.width / 8;
+        const sh = this.img.height / 6;
+        const spriteWidth = sw / 8;
+        const spriteHeight = sh / 6;
+        const sx = this.col * spriteWidth;
+        const sy = this.row * spriteHeight;
+        this.context.fillRect(0, 0, 50, 50);
+        this.context.closePath();
+        // this.context.drawImage(this.img, sx, sy, spriteWidth, spriteHeight, 0, 0, this.width, this.height);
+    }
+}
 class Game{
-    constructor(canvas, ctx, backgroundCanvas, backgroundContext, img) {
+    constructor(canvas, ctx, backgroundCanvas, backgroundContext, img, sprite_sheet) {
         this.canvas = canvas;
         this.context = ctx;
         this.width = canvas.width;
@@ -269,19 +314,22 @@ class Game{
         this.world = new world(canvas, ctx, WORLD_RADIUS, this.player);
         this.planetPool = new planetPool(this);
         this.background = new background(this, img, backgroundCanvas, backgroundContext);
+        this.enemy = new enemy(this, sprite_sheet, 1, 6, 2, 0, 0);
     }
     update(){
         this.player.update();
         this.world.update();
         this.planetPool.update();
-        this.background.update();
+        // this.background.update();
+        this.enemy.update();
     }
     render(){
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.player.render();
         this.world.render();
         this.planetPool.render();
-        this.background.render();
+        // this.background.render();
+        this.enemy.render();
     }
 }
 function handleImageLoad(){
@@ -291,7 +339,9 @@ function handleImageLoad(){
     }
 }
 function initializeGame(){
-   game = new Game(canvas, ctx, backgroundCanvas, backgroundContext, backgroundImage);
+    spriteSheet.width = 512;
+    spriteSheet.height = 385;
+    game = new Game(canvas, ctx, backgroundCanvas, backgroundContext, backgroundImage, spriteSheet);
     animate();
 }
 function animate(){
