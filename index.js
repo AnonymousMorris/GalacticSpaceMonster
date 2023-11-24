@@ -43,6 +43,24 @@ const mousePos = {
 function dot(v1, v2, u1, u2){
     return v1* u1 + v2 * u2;
 }
+function pos(x, y){
+    this.x = x;
+    this.y = y;
+}
+
+class debug{
+    constructor(game){
+        this.pointLocations = [];
+        this.game = game;
+    }
+    render(){
+        this.pointLocations.forEach(loc => {
+            const relativeX = loc.x - this.game.x + centerX;
+            const relativeY = loc.y - this.game.y + centerY;
+            this.game.canvas.fillRect(relativeX, relativeY, 30, 30)
+        });
+    }
+}
 class planetPool{
     constructor(game){
         this.game = game;
@@ -91,16 +109,16 @@ class planetPool{
 class planet{
     constructor(game, x, y, radius) {
         this.game = game;
-        this.absX = x;
-        this.absY = y;
+        this.x = x;
+        this.y = y;
         this.radius = radius;
         this.player = game.player;
-        this.relativeX = this.absX + centerX;
-        this.relativeY = this.absY + centerY;
+        this.relativeX = this.x + centerX;
+        this.relativeY = this.y + centerY;
     }
     update(){
-        this.relativeX = this.absX - this.player.x;
-        this.relativeY =  this.absY - this.player.y;
+        this.relativeX = this.x - this.player.x;
+        this.relativeY =  this.y - this.player.y;
     }
     render(){
         const screenX = this.relativeX + centerX;
@@ -263,13 +281,14 @@ class enemyPool{
         this.img = img;
         this.num = numberOfEnemies;
         this.enemies = [];
+        // todo change the initalX and initalY to starting home planet or something
         for(let i = 0; i < this.num; i++){
             this.enemies.push(new enemy(this.game, this.img, row, col, speed, turningSpeed, 100 * i, 0));
         }
     }
     updateAndRender() {
         this.enemies.forEach((enemy) => {
-            enemy.simpleUpdate();
+            enemy.update();
             enemy.render();
         });
     }
@@ -292,7 +311,7 @@ class enemy{
         this.dy = 0;
         this.dtheta = 0;
     }
-    simpleUpdate(){
+    update(){
         const diffX = this.player.x - this.x;
         const diffY = this.player.y - this.y;
         // prevent division by 0
@@ -310,8 +329,6 @@ class enemy{
             this.dy = 0;
         }
         this.angle += this.dtheta;
-        this.x += this.dx;
-        this.y += this.dy;
         if(Math.abs(diffX) < this.game.width && Math.abs(diffY) < this.game.height){
             const col = Math.floor((this.x + WORLD_RADIUS) / this.game.planetPool.blockWidth);
             const row = Math.floor((this.y + WORLD_RADIUS) / this.game.planetPool.blockHeight);
@@ -321,8 +338,10 @@ class enemy{
                 }
             }
         }
+        this.x += this.dx;
+        this.y += this.dy;
     }
-    nudge(dy, dx, planet){
+    nudge(dx, dy, planet){
         const distance = dist(dy, dx);
         // orthogonal slope = -dx / dy
         // vector u is parallel to slope
@@ -335,20 +354,34 @@ class enemy{
         const relativeY = planet.y - this.y;
         const relativeU = dot(u1, u2, relativeX, relativeY)
         const relativeV = dot(v1, v2, relativeX, relativeY);
-        const enemyDistance = dist(Math.abs(relativeU) * 0.5, Math.abs(relativeV));
+        const a = 2 * planet.radius;
+        const b = 1 * planet.radius;
+        const enemyDistance = dist(Math.abs(relativeU) / a, Math.abs(relativeV) / b);
         // ellipse: x^2 / a^2 + y^2 / b^2 = 1
-        // console.log(u1, u2, v1, v2);
-        if(enemyDistance < planet.radius){
-            // nudge is the distance of player from the edge of the ellipse in terms of V
-            const nudge = (1 - relativeU / 4) - Math.abs(relativeV);
-            this.x += v1 * nudge;
-            this.y += v2 * nudge;
-            console.log(nudge)
+        if(enemyDistance < 1){
+            // nudge is the distance of enemy from the edge of the ellipse in terms of V
+            let nudge = Math.sqrt((a*a - relativeU * relativeU) * b * b / (a * a))
+            nudge -= Math.abs(relativeV);
+            this.x += -v1 * nudge * relativeV / Math.abs(relativeV);
+            this.y += -v2 * nudge * relativeV / Math.abs(relativeV);
+            if(isNaN(nudge)){
+                console.log(distance, u1, u2, v1, v2, relativeX, relativeY, relativeU, relativeV, enemyDistance)
+            }
+            console.log("_________________________________")
+            console.log("diff: ", dx, dy)
+            console.log("u: ", u1, u2)
+            console.log("v: ", v1, v2)
+            console.log(v1*nudge, v2*nudge);
+            console.log(this.game.player.x, this.game.player.y)
+            console.log(this.x, this.y)
         }
     }
     render(){
-        const relativeX = this.x - this.player.x + centerX;
-        const relativeY = this.y - this.player.y + centerY;
+        // todo change spriteWidth and height when actually rendering the real sprite.
+        const spriteWidth = 5;
+        const spriteHeight = 5;
+        const relativeX = this.x - this.player.x + centerX - spriteWidth;
+        const relativeY = this.y - this.player.y + centerY - spriteHeight
         this.context.save();
         this.context.translate(relativeX, relativeY);
         this.context.rotate(-Math.PI / 2 + this.angle);
@@ -362,7 +395,7 @@ class enemy{
         const spriteHeight = sh / 6;
         const sx = this.col * spriteWidth;
         const sy = this.row * spriteHeight;
-        this.context.fillRect(0, 0, 50, 50);
+        this.context.fillRect(0, 0, 10, 10);
         this.context.closePath();
         // this.context.drawImage(this.img, sx, sy, spriteWidth, spriteHeight, 0, 0, this.width, this.height);
     }
@@ -374,6 +407,7 @@ class Game{
         this.width = canvas.width;
         this.height = canvas.height;
         //radius is the size of the world since our world is a circle
+        this.debug = new debug(this);
         this.player = new Player(this.canvas, this.context);
         this.world = new world(canvas, ctx, WORLD_RADIUS, this.player);
         this.planetPool = new planetPool(this);
@@ -385,7 +419,7 @@ class Game{
         this.world.update();
         this.planetPool.update();
         // this.background.update();
-        // this.enemyPool.updateAndRender();
+        this.enemyPool.updateAndRender();
     }
     render(){
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -394,6 +428,7 @@ class Game{
         this.planetPool.render();
         // this.background.render();
         this.enemyPool.updateAndRender();
+        this.debug.render();
     }
 }
 function handleImageLoad(){
