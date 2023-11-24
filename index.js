@@ -40,6 +40,9 @@ const mousePos = {
     relativeX : this.x - centerX,
     relativeY : this.y - centerY
 }
+function dot(v1, v2, u1, u2){
+    return v1* u1 + v2 * u2;
+}
 class planetPool{
     constructor(game){
         this.game = game;
@@ -76,7 +79,6 @@ class planetPool{
         }
     }
     render(){
-
         const col = Math.floor((this.game.player.x + WORLD_RADIUS) / this.blockWidth);
         const row = Math.floor((this.game.player.y + WORLD_RADIUS) / this.blockHeight);
         for(let i = Math.max(0, col - 1); i < Math.min(this.numX, col + 2); i++){
@@ -255,8 +257,25 @@ class background{
         this.context.restore();
     }
 }
+class enemyPool{
+    constructor(game, img, row, col, speed, turningSpeed, numberOfEnemies){
+        this.game = game;
+        this.img = img;
+        this.num = numberOfEnemies;
+        this.enemies = [];
+        for(let i = 0; i < this.num; i++){
+            this.enemies.push(new enemy(this.game, this.img, row, col, speed, turningSpeed, 100 * i, 0));
+        }
+    }
+    updateAndRender() {
+        this.enemies.forEach((enemy) => {
+            enemy.simpleUpdate();
+            enemy.render();
+        });
+    }
+}
 class enemy{
-    constructor(game, img, row, col, speed, initialX, initialY) {
+    constructor(game, img, row, col, speed, turningSpeed, initialX, initialY) {
         this.game = game;
         this.player = this.game.player;
         this.canvas = this.game.canvas;
@@ -267,20 +286,65 @@ class enemy{
         this.x = initialX;
         this.y = initialY;
         this.speed = speed
+        this.turningSpeed = turningSpeed;
         this.angle = 0;
         this.dx = 0;
         this.dy = 0;
+        this.dtheta = 0;
     }
-    update(){
+    simpleUpdate(){
         const diffX = this.player.x - this.x;
         const diffY = this.player.y - this.y;
         // prevent division by 0
-        const distance = Math.max(1, dist(diffX, diffY));
-        this.angle = Math.atan2(diffY, diffX);
-        this.dx = this.speed * diffX / distance;
-        this.dy = this.speed * diffY / distance;
+        let diffAngle = Math.atan2(diffY, diffX) - this.angle;
+        if(diffAngle > Math.PI){
+            diffAngle = -(2* Math.PI - diffAngle);
+        }
+        this.dtheta = diffAngle;
+        this.dtheta = Math.min(this.dtheta, 0.01 * this.turningSpeed);
+        this.dtheta = Math.max(this.dtheta, -0.01 * this.turningSpeed);
+        this.dx = Math.cos(this.angle) * this.speed;
+        this.dy = Math.sin(this.angle) * this.speed;
+        if(Math.abs(diffAngle )> Math.PI / 2){
+            this.dx = 0;
+            this.dy = 0;
+        }
+        this.angle += this.dtheta;
         this.x += this.dx;
         this.y += this.dy;
+        if(Math.abs(diffX) < this.game.width && Math.abs(diffY) < this.game.height){
+            const col = Math.floor((this.x + WORLD_RADIUS) / this.game.planetPool.blockWidth);
+            const row = Math.floor((this.y + WORLD_RADIUS) / this.game.planetPool.blockHeight);
+            for(let i = Math.max(0, col - 1); i < Math.min(this.game.planetPool.numX, col + 2); i++){
+                for(let j = Math.max(0, row - 1); j < Math.min(this.game.planetPool.numY, row + 2); j++){
+                    this.game.planetPool.planetPool[i][j].forEach((planet) => this.nudge(diffX, diffY, planet));
+                }
+            }
+        }
+    }
+    nudge(dy, dx, planet){
+        const distance = dist(dy, dx);
+        // orthogonal slope = -dx / dy
+        // vector u is parallel to slope
+        // vector v is orthogonal to slope
+        const u1 = dx / distance;
+        const u2 = dy / distance;
+        const v1 = dy / distance;
+        const v2 = -dx / distance;
+        const relativeX = planet.x - this.x;
+        const relativeY = planet.y - this.y;
+        const relativeU = dot(u1, u2, relativeX, relativeY)
+        const relativeV = dot(v1, v2, relativeX, relativeY);
+        const enemyDistance = dist(Math.abs(relativeU) * 0.5, Math.abs(relativeV));
+        // ellipse: x^2 / a^2 + y^2 / b^2 = 1
+        // console.log(u1, u2, v1, v2);
+        if(enemyDistance < planet.radius){
+            // nudge is the distance of player from the edge of the ellipse in terms of V
+            const nudge = (1 - relativeU / 4) - Math.abs(relativeV);
+            this.x += v1 * nudge;
+            this.y += v2 * nudge;
+            console.log(nudge)
+        }
     }
     render(){
         const relativeX = this.x - this.player.x + centerX;
@@ -314,14 +378,14 @@ class Game{
         this.world = new world(canvas, ctx, WORLD_RADIUS, this.player);
         this.planetPool = new planetPool(this);
         this.background = new background(this, img, backgroundCanvas, backgroundContext);
-        this.enemy = new enemy(this, sprite_sheet, 1, 6, 2, 0, 0);
+        this.enemyPool = new enemyPool(this, sprite_sheet, 1, 6, 2, 1, 3);
     }
     update(){
         this.player.update();
         this.world.update();
         this.planetPool.update();
         // this.background.update();
-        this.enemy.update();
+        // this.enemyPool.updateAndRender();
     }
     render(){
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -329,7 +393,7 @@ class Game{
         this.world.render();
         this.planetPool.render();
         // this.background.render();
-        this.enemy.render();
+        this.enemyPool.updateAndRender();
     }
 }
 function handleImageLoad(){
