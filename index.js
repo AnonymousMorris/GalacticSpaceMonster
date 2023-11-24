@@ -275,6 +275,54 @@ class background{
         this.context.restore();
     }
 }
+class bulletPool{
+    constructor(game){
+        this.game = game;
+        this.num = 0;
+        this.bulletsInUse= [];
+    }
+    fireBullet(x, y, dx, dy, length, lifeTime){
+        this.num++;
+        this.bulletsInUse.push(new bullet(this.game, x, y, dx, dy, length, lifeTime))
+    }
+    update(){
+        for(let i = 0; i < this.bulletsInUse.length; i++){
+            if(this.bulletsInUse[i].lifeTime < 0){
+                this.bulletsInUse[i] = this.bulletsInUse[this.bulletsInUse.length - 1];
+                this.bulletsInUse.pop();
+                i--;
+            }
+            else{
+                this.bulletsInUse.update();
+            }
+        }
+    }
+    render(){
+        this.bulletsInUse.forEach(bullet => bullet.render());
+    }
+}
+class bullet{
+    constructor(game, x, y, dx, dy, length, lifeTime){
+        this.game = game;
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.angle = Math.atan2(dy, dx);
+        this.length = length;
+        this.lifeTime = lifeTime;
+    }
+    update(){
+        this.x += this.dx;
+        this.y += this.dy;
+        this.lifeTime--;
+    }
+    render(){
+        const relativeX = this.x - this.game.player.x + centerX;
+        const relativeY = this.y - this.game.player.y + centerY;
+        this.context.moveTo()
+    }
+}
 class enemyPool{
     constructor(game, img, row, col, speed, turningSpeed, numberOfEnemies){
         this.game = game;
@@ -354,7 +402,7 @@ class enemy{
         const relativeY = planet.y - this.y;
         const relativeU = dot(u1, u2, relativeX, relativeY)
         const relativeV = dot(v1, v2, relativeX, relativeY);
-        const a = 2 * planet.radius;
+        const a = 4 * planet.radius;
         const b = 1 * planet.radius;
         const enemyDistance = dist(Math.abs(relativeU) / a, Math.abs(relativeV) / b);
         // ellipse: x^2 / a^2 + y^2 / b^2 = 1
@@ -364,16 +412,6 @@ class enemy{
             nudge -= Math.abs(relativeV);
             this.x += -v1 * nudge * relativeV / Math.abs(relativeV);
             this.y += -v2 * nudge * relativeV / Math.abs(relativeV);
-            if(isNaN(nudge)){
-                console.log(distance, u1, u2, v1, v2, relativeX, relativeY, relativeU, relativeV, enemyDistance)
-            }
-            console.log("_________________________________")
-            console.log("diff: ", dx, dy)
-            console.log("u: ", u1, u2)
-            console.log("v: ", v1, v2)
-            console.log(v1*nudge, v2*nudge);
-            console.log(this.game.player.x, this.game.player.y)
-            console.log(this.x, this.y)
         }
     }
     render(){
@@ -448,8 +486,6 @@ function animate(){
     game.render();
     requestAnimationFrame(animate)
 }
-
-
 canvas.addEventListener("mousemove", e => {
     mousePos.x = e.clientX - canvas.offsetLeft;
     mousePos.y = e.clientY - canvas.offsetTop;
