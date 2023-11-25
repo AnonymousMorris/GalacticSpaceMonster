@@ -275,6 +275,7 @@ class background{
         this.context.restore();
     }
 }
+// it seems that v8 reduces the time of garbage collection so much that it doesn't make much sense to write your own pool now. This can be tested later with a profiler
 class bulletPool{
     constructor(game){
         this.game = game;
@@ -435,7 +436,7 @@ class enemy{
         const sy = this.row * spriteHeight;
         this.context.fillRect(0, 0, 10, 10);
         this.context.closePath();
-        // this.context.drawImage(this.img, sx, sy, spriteWidth, spriteHeight, 0, 0, this.width, this.height);
+        this.context.drawImage(this.img, sx, sy, spriteWidth, spriteHeight, 0, 0, this.width, this.height);
     }
 }
 class Game{
@@ -456,7 +457,7 @@ class Game{
         this.player.update();
         this.world.update();
         this.planetPool.update();
-        // this.background.update();
+        this.background.update();
         this.enemyPool.updateAndRender();
     }
     render(){
@@ -464,7 +465,7 @@ class Game{
         this.player.render();
         this.world.render();
         this.planetPool.render();
-        // this.background.render();
+        this.background.render();
         this.enemyPool.updateAndRender();
         this.debug.render();
     }
