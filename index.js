@@ -9,7 +9,7 @@ const NUM_IMAGES = 3;
 let spriteSheet = new Image();
 let homePlanetImage = new Image();
 let backgroundImage = new Image();
-spriteSheet.src = "/assets/enemy_sprite_sheet.svg";
+spriteSheet.src = "/assets/enemy_sprites.png";
 homePlanetImage.src = "/assets/Planets/planet00.png";
 backgroundImage.src = "/assets/space_background.jpg";
 spriteSheet.onload = handleImageLoad;
@@ -83,18 +83,18 @@ class planetPool{
                     if(dist(planetPosX, planetPosY) < WORLD_RADIUS - planetRadius){
                         let collide = false;
                         console.log(this.planetPool[i][j])
-                        for(let a = 0; i < this.planetPool[i][j].length; a++){
-                            if(dist(planetPosX, planetPosY, this.planetPool[i][j][a].x, this.planetPool[i][j][a].y) < planetRadius){
-                                collide = true;
-                                break;
-                            }
-                        }
-                        if(!collide){
-                            this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
-                        }
-                        else{
-                            k--;
-                        }
+                        // for(let a = 0; i < this.planetPool[i][j].length; a++){
+                        //     if(dist(planetPosX, planetPosY, this.planetPool[i][j][a].x, this.planetPool[i][j][a].y) < planetRadius){
+                        //         collide = true;
+                        //         break;
+                        //     }
+                        // }
+                        // if(!collide){
+                        this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
+                        // }
+                        // else{
+                        //     k--;
+                        // }
 
                     }
                 }
@@ -195,7 +195,7 @@ class world{
     constructor(canvas, ctx, radius, player) {
         this.canvas = canvas;
         this.context = ctx;
-        this.radius =radius;
+        this.radius = radius;
         this.player = player;
     }
     update(){
@@ -442,16 +442,16 @@ class enemy{
         this.context.restore();
     }
     renderSprite(){
-        const sw = this.img.width / 8;
-        const sh = this.img.height / 6;
-        const spriteWidth = sw / 8;
-        const spriteHeight = sh / 6;
+        const spriteWidth = this.img.width / 8;
+        const spriteHeight = this.img.height / 6;
         const sx = this.col * spriteWidth;
         const sy = this.row * spriteHeight;
         // delete this after getting enemy sprite drawn
-        this.context.fillRect(0, 0, 10, 10);
-        this.context.closePath();
-        // this.context.drawImage(this.img, sx, sy, spriteWidth, spriteHeight, 0, 0, this.width, this.height);
+        // this.context.fillRect(0, 0, 10, 10);
+        // this.context.closePath();
+        this.width = 40;
+        this.height = 40;
+        this.context.drawImage(this.img, sx, sy, spriteWidth, spriteHeight, 0, 0, this.width, this.height);
     }
 }
 class Game{
@@ -466,7 +466,7 @@ class Game{
         this.world = new world(canvas, ctx, WORLD_RADIUS, this.player);
         this.planetPool = new planetPool(this);
         this.background = new background(this, img, backgroundCanvas, backgroundContext);
-        this.enemyPool = new enemyPool(this, sprite_sheet, 1, 6, 2, 1, 3);
+        this.enemyPool = new enemyPool(this, sprite_sheet, 3, 6, 2, 1, 3);
     }
     update(){
         this.player.update();
@@ -492,8 +492,8 @@ function handleImageLoad(){
     }
 }
 function initializeGame(){
-    spriteSheet.width = 512;
-    spriteSheet.height = 385;
+    spriteSheet.width = 502;
+    spriteSheet.height = 376;
     game = new Game(canvas, ctx, backgroundCanvas, backgroundContext, backgroundImage, spriteSheet);
     animate();
 }
