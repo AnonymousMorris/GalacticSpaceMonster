@@ -11,7 +11,7 @@ let homePlanetImage = new Image();
 let backgroundImage = new Image();
 spriteSheet.src = "/assets/enemy_sprite_sheet.svg";
 homePlanetImage.src = "/assets/Planets/planet00.png";
-backgroundImage.src = "/assets/space_background.png";
+backgroundImage.src = "/assets/space_background.jpg";
 spriteSheet.onload = handleImageLoad;
 homePlanetImage.onload = handleImageLoad;
 backgroundImage.onload= handleImageLoad;
@@ -81,7 +81,21 @@ class planetPool{
                     const planetPosY = Math.random() * this.blockHeight + offsetY;
                     const planetRadius = Math.random() * MAX_PLANET_RADIUS / 2 + MAX_PLANET_RADIUS / 2;
                     if(dist(planetPosX, planetPosY) < WORLD_RADIUS - planetRadius){
-                        this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
+                        let collide = false;
+                        console.log(this.planetPool[i][j])
+                        for(let a = 0; i < this.planetPool[i][j].length; a++){
+                            if(dist(planetPosX, planetPosY, this.planetPool[i][j][a].x, this.planetPool[i][j][a].y) < planetRadius){
+                                collide = true;
+                                break;
+                            }
+                        }
+                        if(!collide){
+                            this.planetPool[i][j].push(new planet(this.game, planetPosX, planetPosY, planetRadius))
+                        }
+                        else{
+                            k--;
+                        }
+
                     }
                 }
             }
@@ -191,7 +205,7 @@ class world{
     render(){
         if(dist(this.x, this.y) + dist(this.canvas.width, this.canvas.height) >= WORLD_RADIUS){
             this.context.beginPath();
-            this.context.lineWidth = 20;
+            this.context.lineWidth = 5;
             this.context.arc(-this.player.x + centerX, -this.player.y + centerY, this.radius, 0, 2* Math.PI);
             this.context.stroke();
         }
@@ -417,10 +431,10 @@ class enemy{
     }
     render(){
         // todo change spriteWidth and height when actually rendering the real sprite.
-        const spriteWidth = 5;
-        const spriteHeight = 5;
-        const relativeX = this.x - this.player.x + centerX - spriteWidth;
-        const relativeY = this.y - this.player.y + centerY - spriteHeight
+        const spriteWidth = 62.75;
+        const spriteHeight = 62.75;
+        const relativeX = this.x - this.player.x + centerX - spriteWidth / 2;
+        const relativeY = this.y - this.player.y + centerY - spriteHeight / 2;
         this.context.save();
         this.context.translate(relativeX, relativeY);
         this.context.rotate(-Math.PI / 2 + this.angle);
@@ -434,9 +448,10 @@ class enemy{
         const spriteHeight = sh / 6;
         const sx = this.col * spriteWidth;
         const sy = this.row * spriteHeight;
+        // delete this after getting enemy sprite drawn
         this.context.fillRect(0, 0, 10, 10);
         this.context.closePath();
-        this.context.drawImage(this.img, sx, sy, spriteWidth, spriteHeight, 0, 0, this.width, this.height);
+        // this.context.drawImage(this.img, sx, sy, spriteWidth, spriteHeight, 0, 0, this.width, this.height);
     }
 }
 class Game{
